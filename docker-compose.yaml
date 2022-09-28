@@ -63,7 +63,7 @@ services:
       - 9200:9200
       - 9300:9300
   kibana:
-    container_name: kb-container
+    container_name: kibana
     image: docker.elastic.co/kibana/kibana:7.4.0
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
@@ -71,6 +71,13 @@ services:
       - elasticsearch
     ports:
       - 5601:5601
+  simpleapi:
+    container_name: simpleapi
+    build:
+      context: SimpleApi
+      dockerfile: Dockerfile
+    ports:
+      - 8000:80
   mysql:
     image: quay.io/debezium/example-mysql:1.9
     container_name: mysql
