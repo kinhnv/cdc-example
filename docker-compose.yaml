@@ -27,23 +27,6 @@ services:
     environment:
       - KAFKA_CLUSTERS_0_NAME=local 
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092 
-  connect:
-    build: 
-      context: connect
-      dockerfile: Dockerfile
-    container_name: connect
-    ports:
-      - "8083:8083"
-    environment:
-      - GROUP_ID=1
-      - CONFIG_STORAGE_TOPIC=my_connect_configs
-      - OFFSET_STORAGE_TOPIC=my_connect_offsets
-      - STATUS_STORAGE_TOPIC=my_connect_statuses
-      - BOOTSTRAP_SERVERS=kafka:9092
-      - CONNECT_PLUGIN_PATH=/kafka/connect
-    depends_on:
-      - mysql
-      - kafka
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
     container_name: elasticsearch
@@ -90,9 +73,38 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
+    depends_on:
+      - mysql
     ports:
       - "8088:80"
     environment:
       - PMA_HOST=mysql
       - PMA_USER=root
       - PMA_PASSWORD=debezium
+  connect:
+    build: 
+      context: connect
+      dockerfile: Dockerfile
+    container_name: connect
+    ports:
+      - "8083:8083"
+    environment:
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - CONNECT_PLUGIN_PATH=/kafka/connect
+    depends_on:
+      - mysql
+      - kafka
+      - elasticsearch
+  register:
+    container_name: register
+    image: ubuntu:latest
+    depends_on:
+      - connect
+    restart: "no"
+    volumes:
+      - ./command.sh:/command.sh
+    entrypoint: ["sh", "-c", "apt-get update -y && apt-get install curl -y && sleep 10 && /command.sh"]

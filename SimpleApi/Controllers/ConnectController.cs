@@ -17,8 +17,10 @@ public class ConnectController : ControllerBase
     }
 
     [HttpPost]
-    public void Post([FromBody]JsonDocument jsonDocument)
+    [Route("/dbserver1.inventory.customers/_update/{documentId}")]
+    public void Post(int documentId, [FromBody]JsonDocument jsonDocument)
     {
+        _logger.Log(LogLevel.Information, documentId.ToString());
         using (var stream = new MemoryStream())
         {
             Utf8JsonWriter writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
