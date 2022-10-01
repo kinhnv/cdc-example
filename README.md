@@ -1,6 +1,6 @@
 # cdc-example
 
-## Chạy demo
+## Chạy Demo
 docker-compose up
 ## Phạm vi Demo
 Demo sẽ đồng bộ 2 bảng cuscomters và addresses vào index dbserver1.inventory.customers
