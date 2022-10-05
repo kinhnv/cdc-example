@@ -1,17 +1,11 @@
-version: "3.9"  # optional since v1.27.0
+version: "3.9"
 services:
   zookeeper:
     image: quay.io/debezium/zookeeper:1.9
     container_name: zookeeper
-    ports:
-      - "2181:2181"
-      - "2888:2888"
-      - "3888:3888"
   kafka:
     image: quay.io/debezium/kafka:1.9
     container_name: kafka
-    ports:
-      - "9092:9092"
     depends_on:
       - zookeeper
     environment:
@@ -42,9 +36,6 @@ services:
         hard: 65536
     cap_add:
       - IPC_LOCK
-    ports:
-      - 9200:9200
-      - 9300:9300
   kibana:
     container_name: kibana
     image: docker.elastic.co/kibana/kibana:7.4.0
@@ -54,38 +45,13 @@ services:
       - elasticsearch
     ports:
       - 5601:5601
-  simpleapi:
-    container_name: simpleapi
-    build:
-      context: SimpleApi
-      dockerfile: Dockerfile
-    ports:
-      - 8000:80
-  mysql:
-    image: quay.io/debezium/example-mysql:1.9
-    container_name: mysql
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=debezium
-      - MYSQL_USER=mysqluser
-      - MYSQL_PASSWORD=mysqlpw
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    depends_on:
-      - mysql
-    ports:
-      - "8088:80"
-    environment:
-      - PMA_HOST=mysql
-      - PMA_USER=root
-      - PMA_PASSWORD=debezium
   connect:
     build: 
       context: connect
       dockerfile: Dockerfile
     container_name: connect
+    deploy:
+      replicas: 1
     ports:
       - "8083:8083"
     environment:
@@ -96,15 +62,5 @@ services:
       - BOOTSTRAP_SERVERS=kafka:9092
       - CONNECT_PLUGIN_PATH=/kafka/connect
     depends_on:
-      - mysql
       - kafka
       - elasticsearch
-  register:
-    container_name: register
-    image: ubuntu:latest
-    depends_on:
-      - connect
-    restart: "no"
-    volumes:
-      - ./command.sh:/command.sh
-    entrypoint: ["sh", "-c", "apt-get update -y && apt-get install curl -y && sleep 10 && /command.sh"]
