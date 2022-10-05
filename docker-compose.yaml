@@ -20,38 +20,12 @@ services:
       - kafka
     environment:
       - KAFKA_CLUSTERS_0_NAME=local 
-      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
-    container_name: elasticsearch
-    environment:
-      - xpack.security.enabled=false
-      - discovery.type=single-node
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    cap_add:
-      - IPC_LOCK
-  kibana:
-    container_name: kibana
-    image: docker.elastic.co/kibana/kibana:7.4.0
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
-    ports:
-      - 5601:5601
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
   connect:
     build: 
       context: connect
       dockerfile: Dockerfile
     container_name: connect
-    deploy:
-      replicas: 1
     ports:
       - "8083:8083"
     environment:
@@ -61,6 +35,12 @@ services:
       - STATUS_STORAGE_TOPIC=my_connect_statuses
       - BOOTSTRAP_SERVERS=kafka:9092
       - CONNECT_PLUGIN_PATH=/kafka/connect
+  register:
+    container_name: register
+    image: ubuntu:latest
     depends_on:
-      - kafka
-      - elasticsearch
+      - connect
+    restart: "no"
+    volumes:
+      - ./command.sh:/command.sh
+    entrypoint: ["sh", "-c", "apt-get update -y && apt-get install curl -y && sleep 10 && /command.sh"]
